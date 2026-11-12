@@ -1,23 +1,36 @@
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, type Ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { t } from '../api';
-import type { crudApi } from '../api/crud';
-export interface ManagementOptions {
-    kind: 'User' | 'Role' | 'Tenant';
-    api: ReturnType<typeof crudApi>;
+import type { CrudApi, CrudEntity } from '../api/crud';
+import type { EntityDto } from '../api/types';
+
+export interface ManagementOptions<TDto> {
+    kind: CrudEntity;
+    api: CrudApi<TDto, never>;
+    /** Localization key for the delete confirmation; `{0}` receives the row's name. */
     warningKey: string;
+    /** Name shown in the delete confirmation. */
+    label: (row: TDto) => string;
 }
-export function useManagement(options: ManagementOptions) {
+
+/** Payload of Element Plus' table `sort-change` event (order is 'ascending', 'descending' or null). */
+export interface SortChange {
+    prop: string;
+    order: string | null;
+}
+
+export function useManagement<TDto extends EntityDto>(options: ManagementOptions<TDto>) {
     const route = useRoute(),
         busy = ref(false),
-        rows = ref<any[]>([]),
+        rows = ref([]) as Ref<TDto[]>,
         total = ref(0),
         pageNum = ref(1),
         pageSize = ref(10),
         keyword = ref(String(route.query[options.kind === 'User' ? 'filterText' : 'keyword'] || '')),
-        active = ref<boolean | string>(''),
+        active = ref<boolean | ''>(''),
         sort = ref('');
+
     async function list() {
         busy.value = true;
         try {
@@ -28,8 +41,8 @@ export function useManagement(options: ManagementOptions) {
                 SkipCount: (pageNum.value - 1) * pageSize.value,
                 MaxResultCount: pageSize.value,
             });
-            rows.value = r.items || [];
-            total.value = r.totalCount || 0;
+            rows.value = r.items ?? [];
+            total.value = r.totalCount ?? 0;
         } finally {
             busy.value = false;
         }
@@ -38,7 +51,7 @@ export function useManagement(options: ManagementOptions) {
         pageNum.value = 1;
         return list();
     }
-    function sorting({ prop, order }: { prop: string; order: 'ascending' | 'descending' | null }) {
+    function sorting({ prop, order }: SortChange) {
         sort.value = order ? `${prop} ${order === 'ascending' ? 'ASC' : 'DESC'}` : '';
         return search();
     }
@@ -47,15 +60,11 @@ export function useManagement(options: ManagementOptions) {
         active.value = '';
         return search();
     }
-    async function remove(row: any) {
+    async function remove(row: TDto) {
         try {
-            await ElMessageBox.confirm(
-                t(options.warningKey, '确定删除 {0} 吗？', row.fullName || row.displayName || row.name || row.userName),
-                t('Delete', '删除'),
-                { type: 'warning' }
-            );
+            await ElMessageBox.confirm(t(options.warningKey, options.label(row)), t('Delete'), { type: 'warning' });
             await options.api.delete(row.id);
-            ElMessage.success(t('SuccessfullyDeleted', '删除成功'));
+            ElMessage.success(t('SuccessfullyDeleted'));
             await list();
         } catch (e) {
             if (e !== 'cancel' && e !== 'close') throw e;

@@ -18,12 +18,13 @@ const router = createRouter({
     ],
 });
 
+// These checks only decide what the UI shows. The backend authorizes every API call independently.
 router.beforeEach((to) => {
     if (!state.config) return true;
     if (to.matched.some((record) => record.name === 'app') && !state.session?.user)
         return { name: 'login', query: { redirect: to.fullPath } };
     if (to.name === 'app' && router.hasRoute('home')) return { name: 'home', query: to.query, hash: to.hash };
-    if (to.meta.permission && !permitted(String(to.meta.permission))) return { name: 'home' };
+    if (to.meta.permission && !permitted(to.meta.permission)) return { name: 'home' };
     if ((to.name === 'login' || to.name === 'register') && state.session?.user) return { name: 'app' };
     return true;
 });

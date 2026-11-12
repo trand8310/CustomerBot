@@ -1,310 +1,298 @@
 <script setup lang="ts">
-import { t } from '../../api';
-
-const homeTitle = () => t('HomePage', '首页');
+import { computed, onMounted, reactive, ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { permitted, state, t } from '../../api';
+import { userApi } from '../../api/users';
+import { roleApi } from '../../api/roles';
+import { tenantApi } from '../../api/tenants';
 import DashboardChart from '../../components/dashboard-chart/dashboard-chart.vue';
+
+interface Counts {
+    activeUsers?: number;
+    inactiveUsers?: number;
+    roles?: number;
+    tenants?: number;
+}
+
+interface StatCard {
+    label: string;
+    value: number;
+    icon: string;
+    tone: 'indigo' | 'emerald' | 'amber';
+    route: string;
+}
+
+const router = useRouter();
+const loading = ref(true);
+const counts = reactive<Counts>({});
+
+const user = computed(() => state.session?.user);
+const displayName = computed(() => {
+    const u = user.value;
+    if (!u) return '';
+    return [u.name, u.surname].filter(Boolean).join(' ') || u.userName;
+});
+
+/** Only the totalCount is needed, so each request asks for a single row. */
+async function total(load: () => Promise<{ totalCount: number }>): Promise<number | undefined> {
+    try {
+        return (await load()).totalCount;
+    } catch {
+        return undefined;
+    }
+}
+
+onMounted(async () => {
+    const one = { MaxResultCount: 1 };
+    const tasks: Promise<void>[] = [];
+    if (permitted('Pages.Users')) {
+        tasks.push(total(() => userApi.getAll({ ...one, IsActive: true })).then((v) => void (counts.activeUsers = v)));
+        tasks.push(
+            total(() => userApi.getAll({ ...one, IsActive: false })).then((v) => void (counts.inactiveUsers = v))
+        );
+    }
+    if (permitted('Pages.Roles')) tasks.push(total(() => roleApi.getAll(one)).then((v) => void (counts.roles = v)));
+    if (permitted('Pages.Tenants'))
+        tasks.push(total(() => tenantApi.getAll(one)).then((v) => void (counts.tenants = v)));
+    await Promise.all(tasks);
+    loading.value = false;
+});
+
+const cards = computed<StatCard[]>(() => {
+    const list: StatCard[] = [];
+    if (counts.activeUsers !== undefined || counts.inactiveUsers !== undefined)
+        list.push({
+            label: t('Users'),
+            value: (counts.activeUsers ?? 0) + (counts.inactiveUsers ?? 0),
+            icon: 'fa-users',
+            tone: 'indigo',
+            route: 'users',
+        });
+    if (counts.roles !== undefined)
+        list.push({
+            label: t('Roles'),
+            value: counts.roles,
+            icon: 'fa-masks-theater',
+            tone: 'emerald',
+            route: 'roles',
+        });
+    if (counts.tenants !== undefined)
+        list.push({
+            label: t('Tenants'),
+            value: counts.tenants,
+            icon: 'fa-building',
+            tone: 'amber',
+            route: 'tenants',
+        });
+    return list;
+});
+
+const chart = computed(() => {
+    const entries: [string, number | undefined][] = [
+        [t('ActiveUsers'), counts.activeUsers],
+        [t('InactiveUsers'), counts.inactiveUsers],
+        [t('Roles'), counts.roles],
+        [t('Tenants'), counts.tenants],
+    ];
+    const shown = entries.filter((entry): entry is [string, number] => entry[1] !== undefined);
+    return { categories: shown.map(([label]) => label), values: shown.map(([, value]) => value) };
+});
 </script>
 <template>
     <div>
         <div class="heading">
-            <h1>{{ homeTitle() }}</h1>
+            <h1>{{ t('HomePage') }}</h1>
         </div>
         <section class="dashboard">
-            <p class="text-body-secondary">以下仪表盘使用示例数据。</p>
-            <div class="container-fluid px-0">
-                <div class="row">
-                    <div class="col-lg-3 col-6">
-                        <div class="small-box text-bg-primary">
-                            <div class="inner">
-                                <h3>8.2k+</h3>
-                                <p>Stargazers</p>
-                            </div>
-                            <div class="small-box-icon" aria-hidden="true">
-                                <i class="fas fa-star"></i>
-                            </div>
-                            <a
-                                href="https://github.com/aspnetboilerplate/aspnetboilerplate/stargazers"
-                                class="small-box-footer"
-                                target="_blank">
-                                More info
-                                <i class="fas fa-arrow-circle-right"></i>
-                            </a>
-                        </div>
-                    </div>
-                    <div class="col-lg-3 col-6">
-                        <div class="small-box text-bg-success">
-                            <div class="inner">
-                                <h3>140+</h3>
-                                <p>Contributors</p>
-                            </div>
-                            <div class="small-box-icon" aria-hidden="true">
-                                <i class="fas fa-users"></i>
-                            </div>
-                            <a
-                                href="https://github.com/aspnetboilerplate/aspnetboilerplate/graphs/contributors"
-                                class="small-box-footer"
-                                target="_blank">
-                                More info
-                                <i class="fas fa-arrow-circle-right"></i>
-                            </a>
-                        </div>
-                    </div>
-                    <div class="col-lg-3 col-6">
-                        <div class="small-box text-bg-warning">
-                            <div class="inner">
-                                <h3>1.6k+</h3>
-                                <p>Used / Dependents</p>
-                            </div>
-                            <div class="small-box-icon" aria-hidden="true">
-                                <i class="fas fa-tools"></i>
-                            </div>
-                            <a
-                                href="https://github.com/aspnetboilerplate/aspnetboilerplate/network/dependents"
-                                class="small-box-footer"
-                                target="_blank">
-                                More info
-                                <i class="fas fa-arrow-circle-right"></i>
-                            </a>
-                        </div>
-                    </div>
-                    <div class="col-lg-3 col-6">
-                        <div class="small-box text-bg-danger">
-                            <div class="inner">
-                                <h3>3.1k+</h3>
-                                <p>Forks</p>
-                            </div>
-                            <div class="small-box-icon" aria-hidden="true">
-                                <i class="fas fa-code"></i>
-                            </div>
-                            <a
-                                href="https://github.com/aspnetboilerplate/aspnetboilerplate/network/members"
-                                class="small-box-footer"
-                                target="_blank">
-                                More info
-                                <i class="fas fa-arrow-circle-right"></i>
-                            </a>
-                        </div>
-                    </div>
+            <div class="welcome-card">
+                <div class="welcome-avatar" aria-hidden="true">
+                    {{ (displayName || 'U').slice(0, 1).toUpperCase() }}
                 </div>
-                <DashboardChart />
-                <div class="row">
-                    <div class="col-12 col-sm-6 col-md-3">
-                        <div class="info-box">
-                            <span class="info-box-icon bg-primary elevation-1">
-                                <i class="fas fa-plus-circle"></i>
-                            </span>
-                            <div class="info-box-content">
-                                <span class="info-box-text">Commits</span>
-                                <span class="info-box-number">6,350+</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-12 col-sm-6 col-md-3">
-                        <div class="info-box mb-3">
-                            <span class="info-box-icon bg-warning elevation-1">
-                                <i class="fas fa-exclamation-triangle"></i>
-                            </span>
-                            <div class="info-box-content">
-                                <span class="info-box-text">Issues</span>
-                                <span class="info-box-number">170+</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-12 col-sm-6 col-md-3">
-                        <div class="info-box mb-3">
-                            <span class="info-box-icon bg-info elevation-1">
-                                <i class="fas fa-tag"></i>
-                            </span>
-                            <div class="info-box-content">
-                                <span class="info-box-text">Releases</span>
-                                <span class="info-box-number">200+</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-12 col-sm-6 col-md-3">
-                        <div class="info-box mb-3">
-                            <span class="info-box-icon bg-success elevation-1">
-                                <i class="fas fa-eye"></i>
-                            </span>
-                            <div class="info-box-content">
-                                <span class="info-box-text">Watching by</span>
-                                <span class="info-box-number">810+</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="card">
-                            <div class="card-header">
-                                <h3 class="card-title">Open Issues</h3>
-                            </div>
-                            <div class="card-body table-responsive p-0">
-                                <table class="table table-hover text-nowrap">
-                                    <thead class="bg-light">
-                                        <tr>
-                                            <th>Id</th>
-                                            <th class="w-25">Title</th>
-                                            <th class="w-25">Labels</th>
-                                            <th>Date</th>
-                                            <th>Opened by</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td>
-                                                <a
-                                                    href="https://github.com/aspnetboilerplate/aspnetboilerplate/issues/5452"
-                                                    target="_blank">
-                                                    5452
-                                                </a>
-                                            </td>
-                                            <td>Angular UI migration to AdminLTE 3</td>
-                                            <td>
-                                                <span class="badge badge-secondary mx-1">
-                                                    module-zero-core-template
-                                                </span>
-                                                <span class="badge badge-primary mx-1">feature</span>
-                                            </td>
-                                            <td>11 days ago</td>
-                                            <td>iyilm4z</td>
-                                        </tr>
-                                        <tr>
-                                            <td>
-                                                <a
-                                                    href="https://github.com/aspnetboilerplate/aspnetboilerplate/issues/5391"
-                                                    target="_blank">
-                                                    5391
-                                                </a>
-                                            </td>
-                                            <td>AbpCacheBase should lock the same object for sync and async</td>
-                                            <td>
-                                                <span class="badge badge-danger mx-1">bug</span>
-                                                <span class="badge badge-success mx-1">pull request candidate</span>
-                                            </td>
-                                            <td>26 days ago</td>
-                                            <td>acjh</td>
-                                        </tr>
-                                        <tr>
-                                            <td>
-                                                <a
-                                                    href="https://github.com/aspnetboilerplate/aspnetboilerplate/issues/5390"
-                                                    target="_blank">
-                                                    5390
-                                                </a>
-                                            </td>
-                                            <td>AbpCache sliding/absolute expire time</td>
-                                            <td>
-                                                <span class="badge badge-warning mx-1">breaking-change</span>
-                                                <span class="badge badge-info mx-1">enhancement</span>
-                                            </td>
-                                            <td>27 days ago</td>
-                                            <td>ryancyq</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="card">
-                            <div class="card-header">
-                                <h3 class="card-title">Closed Pull Requests</h3>
-                            </div>
-                            <div class="card-body table-responsive p-0">
-                                <table class="table table-hover text-nowrap">
-                                    <thead class="bg-light">
-                                        <tr>
-                                            <th>Id</th>
-                                            <th class="w-25">Title</th>
-                                            <th class="w-25">Milestone</th>
-                                            <th>Date</th>
-                                            <th>Made by</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td>
-                                                <a
-                                                    href="https://github.com/aspnetboilerplate/aspnetboilerplate/pull/5430"
-                                                    target="_blank">
-                                                    5430
-                                                </a>
-                                            </td>
-                                            <td>Added Dynamic-Parameter-System doc to documentation menu</td>
-                                            <td>v5.6</td>
-                                            <td>18 days ago</td>
-                                            <td>maliming</td>
-                                        </tr>
-                                        <tr>
-                                            <td>
-                                                <a
-                                                    href="https://github.com/aspnetboilerplate/aspnetboilerplate/pull/5362"
-                                                    target="_blank">
-                                                    5362
-                                                </a>
-                                            </td>
-                                            <td>Dynamic Parameter Module</td>
-                                            <td>v5.4</td>
-                                            <td>25 days ago</td>
-                                            <td>demirmusa</td>
-                                        </tr>
-                                        <tr>
-                                            <td>
-                                                <a
-                                                    href="https://github.com/aspnetboilerplate/aspnetboilerplate/pull/4924"
-                                                    target="_blank">
-                                                    4924
-                                                </a>
-                                            </td>
-                                            <td>ASP.NET Core 3.0 Upgrade</td>
-                                            <td>v5.0</td>
-                                            <td>Oct 15</td>
-                                            <td>ismcagdas</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
+                <div class="welcome-text">
+                    <h2>{{ t('WelcomeUser', displayName) }}</h2>
+                    <p>
+                        <span class="meta-chip">
+                            <i class="fa-solid fa-building" aria-hidden="true"></i>
+                            {{ t('CurrentTenant') }}: {{ state.session?.tenant?.tenancyName || t('Host') }}
+                        </span>
+                        <span v-if="state.session?.application?.version" class="meta-chip">
+                            <i class="fa-solid fa-code-branch" aria-hidden="true"></i>
+                            {{ t('Version') }} {{ state.session.application.version }}
+                        </span>
+                    </p>
                 </div>
             </div>
+            <div v-loading="loading" class="stat-grid">
+                <div v-for="card in cards" :key="card.route" class="stat-card" :class="'tone-' + card.tone">
+                    <div class="stat-head">
+                        <span class="stat-label">{{ card.label }}</span>
+                        <span class="stat-icon" aria-hidden="true">
+                            <i class="fa-solid" :class="card.icon"></i>
+                        </span>
+                    </div>
+                    <div class="stat-value">{{ card.value.toLocaleString() }}</div>
+                    <router-link v-if="router.hasRoute(card.route)" :to="{ name: card.route }" class="stat-link">
+                        {{ t('ViewAll') }}
+                        <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                    </router-link>
+                </div>
+                <p v-if="!loading && !cards.length" class="stat-empty">{{ t('NoStatisticsAvailable') }}</p>
+            </div>
+            <DashboardChart
+                v-if="!loading && chart.values.length"
+                :title="t('Overview')"
+                :aria-label="t('Overview')"
+                :categories="chart.categories"
+                :values="chart.values" />
         </section>
     </div>
 </template>
 <style>
-.dashboard .small-box h3 {
-    font-size: 1.625rem;
+.welcome-card {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+    padding: 1.5rem;
+    overflow: hidden;
+    border: 1px solid var(--app-border);
+    border-radius: var(--app-radius);
+    background:
+        radial-gradient(28rem 14rem at 100% 0%, rgba(99, 102, 241, 0.14), transparent 70%),
+        radial-gradient(20rem 12rem at 85% 120%, rgba(14, 165, 233, 0.1), transparent 70%),
+        var(--app-surface);
+    box-shadow: var(--app-shadow-xs);
 }
-.dashboard .small-box-icon {
+.welcome-avatar {
     display: grid;
     place-items: center;
-    font-size: 3.5rem;
-}
-.dashboard .info-box-icon {
+    flex: none;
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    font-size: 1.25rem;
+    font-weight: 600;
     color: #fff;
+    background: linear-gradient(135deg, #818cf8, #4f46e5);
+    box-shadow: 0 6px 16px -4px rgba(79, 70, 229, 0.45);
 }
-.dashboard .badge-primary {
-    background: var(--bs-primary);
+.welcome-text h2 {
+    margin: 0 0 0.5rem;
+    font-size: 1.125rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
 }
-.dashboard .badge-secondary {
-    background: var(--bs-secondary);
+.welcome-text p {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 0;
 }
-.dashboard .badge-success {
-    background: var(--bs-success);
+.meta-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border: 1px solid var(--app-border);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.7);
+    font-size: 0.75rem;
+    color: var(--app-text-secondary);
 }
-.dashboard .badge-danger {
-    background: var(--bs-danger);
+.meta-chip i {
+    color: #94a3b8;
 }
-.dashboard .badge-warning {
-    background: var(--bs-warning);
-    color: #212529;
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1rem;
+    min-height: 120px;
+    margin-bottom: 1.25rem;
 }
-.dashboard .badge-info {
-    background: var(--bs-info);
-    color: #212529;
+.stat-card {
+    --tone: var(--app-primary);
+    --tone-soft: var(--app-primary-soft);
+    display: flex;
+    flex-direction: column;
+    padding: 1.25rem;
+    border: 1px solid var(--app-border);
+    border-radius: var(--app-radius);
+    background: var(--app-surface);
+    box-shadow: var(--app-shadow-xs);
+    transition:
+        box-shadow var(--app-transition),
+        transform var(--app-transition),
+        border-color var(--app-transition);
+}
+.stat-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--app-border-strong);
+    box-shadow: var(--app-shadow-sm);
+}
+.stat-card.tone-emerald {
+    --tone: var(--app-success);
+    --tone-soft: var(--app-success-soft);
+}
+.stat-card.tone-amber {
+    --tone: var(--app-warning);
+    --tone-soft: var(--app-warning-soft);
+}
+.stat-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.stat-label {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--app-text-muted);
+}
+.stat-icon {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--tone-soft);
+    color: var(--tone);
+}
+.stat-value {
+    margin: 0.5rem 0 1rem;
+    font-size: 2rem;
+    font-weight: 650;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+    color: var(--app-text);
+}
+.stat-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: auto;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--tone);
+}
+.stat-link i {
+    font-size: 0.75rem;
+    transition: transform var(--app-transition);
+}
+.stat-link:hover {
+    color: var(--tone);
+}
+.stat-link:hover i {
+    transform: translateX(3px);
+}
+.stat-empty {
+    grid-column: 1 / -1;
+    margin: 0;
+    color: var(--app-text-muted);
+}
+@media (max-width: 700px) {
+    .welcome-card {
+        padding: 1.125rem;
+    }
 }
 </style>

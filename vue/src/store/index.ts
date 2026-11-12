@@ -1,10 +1,9 @@
 import { createPinia, defineStore } from 'pinia';
-export interface SessionInfo {
-    user?: Record<string, any> | null;
-    tenant?: Record<string, any> | null;
-    application?: Record<string, any>;
-}
+import type { SessionInfo, UserConfiguration } from '../api/types';
+
+export type { SessionInfo } from '../api/types';
+
 export const pinia = createPinia();
 export const useSessionStore = defineStore('session', {
-    state: () => ({ config: null as Record<string, any> | null, session: null as SessionInfo | null }),
+    state: () => ({ config: null as UserConfiguration | null, session: null as SessionInfo | null }),
 });

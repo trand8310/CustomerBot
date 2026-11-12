@@ -1,18 +1,18 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { permitted, t } from '../../api';
+import { permitted, tOr } from '../../api';
 import type { NavigationItem } from '../../api/navigation';
 
 const { item } = defineProps<{ item: NavigationItem }>();
 const router = useRouter();
-const title = computed(() => (item.titleKey ? t(item.titleKey, item.title) : item.title));
+const title = computed(() => tOr(item.titleKey, item.title));
 
 function isVisible(entry: NavigationItem): boolean {
     if (entry.type === 'group') return entry.children.some(isVisible);
     if (entry.type === 'external') return true;
     const route = router.resolve({ name: entry.page });
-    return entry.menu !== false && (!route.meta.permission || permitted(String(route.meta.permission)));
+    return entry.menu !== false && (!route.meta.permission || permitted(route.meta.permission));
 }
 </script>
 

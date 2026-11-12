@@ -1,11 +1,8 @@
 import { defineStore } from 'pinia';
-import type { NavigationItem, NavigationPage } from '../api/navigation';
+import type { NavigationItem } from '../api/navigation';
+import { collectPages } from '../utils/navigation';
 
-export function collectPages(items: NavigationItem[]): NavigationPage[] {
-    return items.flatMap((item) =>
-        item.type === 'group' ? collectPages(item.children) : item.type === 'page' ? [item] : []
-    );
-}
+export { collectPages };
 
 export const useNavigationStore = defineStore('navigation', {
     state: () => ({

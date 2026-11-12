@@ -1,6 +1,8 @@
-import { HubConnectionBuilder, LogLevel, type HubConnection } from '@microsoft/signalr';
+import type { HubConnection } from '@microsoft/signalr';
 import { ElNotification } from 'element-plus';
-import { cookie } from '../api';
+import { apiBaseUrl } from '../config';
+import { cookie, encryptedTokenCookie } from '../api';
+
 let connection: HubConnection | undefined;
 
 interface HostNotification {
@@ -12,16 +14,19 @@ interface HostNotification {
     };
 }
 
-export async function startNotifications() {
+export async function startNotifications(): Promise<void> {
     if (connection) return;
-    const base = (import.meta.env.VITE_API_BASE_URL || 'https://localhost:44311').replace(/\/$/, '');
-    const encrypted = cookie('enc_auth_token');
-    connection = new HubConnectionBuilder()
-        .withUrl(`${base}/signalr?enc_auth_token=${encrypted}`)
+    // Loaded on demand so the SignalR client is not part of the initial bundle.
+    const { HubConnectionBuilder, LogLevel } = await import('@microsoft/signalr');
+    if (connection) return;
+    const encrypted = encodeURIComponent(cookie(encryptedTokenCookie));
+    const current = new HubConnectionBuilder()
+        .withUrl(`${apiBaseUrl}/signalr?enc_auth_token=${encrypted}`)
         .withAutomaticReconnect()
         .configureLogging(LogLevel.Warning)
         .build();
-    connection.on('getNotification', (notification: HostNotification) => {
+    connection = current;
+    current.on('getNotification', (notification: HostNotification) => {
         const data = notification?.notification?.data;
         const message = data?.properties?.Message || data?.message;
         if (!message) return;
@@ -29,12 +34,12 @@ export async function startNotifications() {
         if (typeof Notification !== 'undefined' && Notification.permission === 'granted')
             new Notification('CustomerBot', { body: message });
     });
-    connection.onreconnected(() => connection?.invoke('register').catch(() => {}));
+    current.onreconnected(() => current.invoke('register').catch(() => {}));
     try {
-        await connection.start();
-        await connection.invoke('register');
+        await current.start();
+        await current.invoke('register');
     } catch (error) {
-        console.warn('SignalR connection unavailable:', error.message);
+        console.warn('SignalR connection unavailable:', error instanceof Error ? error.message : error);
         connection = undefined;
     }
 }

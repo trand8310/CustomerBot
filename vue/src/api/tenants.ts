@@ -1,2 +1,4 @@
 import { crudApi } from './crud';
-export const tenantApi = crudApi('Tenant');
+import type { TenantDto, TenantForm } from './types';
+
+export const tenantApi = crudApi<TenantDto, TenantForm>('Tenant');

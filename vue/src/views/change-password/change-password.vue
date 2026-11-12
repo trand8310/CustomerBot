@@ -1,29 +1,30 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { ElMessage } from 'element-plus';
+import { ElMessage, type FormInstance } from 'element-plus';
 import { t } from '../../api';
 import { userApi } from '../../api/users';
 import { useValidation } from '../../composables/validation';
 
 const router = useRouter(),
-    formRef = ref<any>(),
-    form = ref<any>({}),
+    formRef = ref<FormInstance>(),
+    form = ref({ currentPassword: '', newPassword: '', confirm: '' }),
     busy = ref(false);
 
 const { rules } = useValidation(form);
 
 async function changePassword() {
-    await formRef.value.validate();
+    if (busy.value || !formRef.value || !(await formRef.value.validate().catch(() => false))) return;
     busy.value = true;
     try {
-        const result = await userApi.changePassword(form.value);
+        const { currentPassword, newPassword } = form.value;
+        const result = await userApi.changePassword({ currentPassword, newPassword });
         if (result === false) {
-            ElMessage.error('密码修改失败');
+            ElMessage.error(t('PasswordChangeFailed'));
             return;
         }
-        ElMessage.success('密码修改成功');
-        router.push(router.hasRoute('home') ? { name: 'home' } : { name: 'app' });
+        ElMessage.success(t('PasswordChangedSuccessfully'));
+        await router.push(router.hasRoute('home') ? { name: 'home' } : { name: 'app' });
     } finally {
         busy.value = false;
     }
@@ -32,7 +33,7 @@ async function changePassword() {
 <template>
     <div>
         <div class="heading">
-            <h1>{{ t('UpdatePassword', '修改密码') }}</h1>
+            <h1>{{ t('UpdatePassword') }}</h1>
         </div>
         <div class="panel card">
             <el-form
@@ -42,16 +43,16 @@ async function changePassword() {
                 label-position="top"
                 style="max-width: 500px"
                 @submit.prevent="changePassword">
-                <el-form-item :label="t('CurrentPassword', '当前密码')" prop="currentPassword">
+                <el-form-item :label="t('CurrentPassword')" prop="currentPassword">
                     <el-input v-model="form.currentPassword" type="password" show-password />
                 </el-form-item>
-                <el-form-item :label="t('NewPassword', '新密码')" prop="newPassword">
+                <el-form-item :label="t('NewPassword')" prop="newPassword">
                     <el-input v-model="form.newPassword" type="password" show-password />
                 </el-form-item>
-                <el-form-item :label="t('ConfirmNewPassword', '确认新密码')" prop="confirm">
+                <el-form-item :label="t('ConfirmNewPassword')" prop="confirm">
                     <el-input v-model="form.confirm" type="password" show-password />
                 </el-form-item>
-                <el-button type="primary" native-type="submit" :loading="busy">{{ t('Save', '保存') }}</el-button>
+                <el-button type="primary" native-type="submit" :loading="busy">{{ t('Save') }}</el-button>
             </el-form>
         </div>
     </div>

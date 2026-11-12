@@ -1,28 +1,38 @@
 import { computed, type Ref } from 'vue';
+import type { FormItemRule } from 'element-plus';
 import { z } from 'zod';
 import { t } from '../api';
-export function useValidation(form: Ref<any>) {
+import { passwordPattern } from '../utils/password';
+
+interface PasswordFields {
+    password?: string;
+    newPassword?: string;
+}
+
+export function useValidation(form: Ref<object>) {
     const requiredSchema = z.string().trim().min(1);
-    const passwordSchema = z.string().regex(/^(?=.{8,32}$)(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[0-9a-zA-Z!@#$%^&*()]+$/);
-    function zodRule(schema: z.ZodType, message: () => string) {
+    const passwordSchema = z.string().regex(passwordPattern);
+    function zodRule(schema: z.ZodType, message: () => string): FormItemRule {
         return {
-            validator: (_: unknown, value: unknown, cb: (error?: Error) => void) =>
-                schema.safeParse(value).success ? cb() : cb(new Error(message())),
+            validator: (_rule, value, callback) =>
+                schema.safeParse(value).success ? callback() : callback(new Error(message())),
             trigger: 'blur',
         };
     }
-    const requiredRule = zodRule(requiredSchema, () => t('ThisFieldIsRequired', '此项不能为空'));
+    const requiredRule = zodRule(requiredSchema, () => t('ThisFieldIsRequired'));
     const passwordRule = zodRule(passwordSchema, () =>
-        t('PasswordsMustBeAtLeast8CharactersContainLowercaseUppercaseNumber', '密码需为 8–32 位，包含大小写字母和数字')
+        t('PasswordsMustBeAtLeast8CharactersContainLowercaseUppercaseNumber')
     );
-    const emailRule = zodRule(z.email(), () => t('EmailAddress', '请输入有效邮箱'));
-    const rules = computed(() => ({
+    const emailRule = zodRule(z.email(), () => t('InvalidEmailAddress'));
+    const lengthRule = (min: number, max: number) =>
+        zodRule(z.string().trim().min(min).max(max), () => t('LengthBetween', min, max));
+    const rules = computed<Record<string, FormItemRule[]>>(() => ({
         name: [requiredRule],
         surname: [requiredRule],
-        userName: [zodRule(z.string().min(2).max(256), () => t('ThisFieldIsRequired', '请输入用户名'))],
+        userName: [lengthRule(2, 256)],
         userNameOrEmailAddress: [requiredRule],
-        displayName: [zodRule(z.string().min(2).max(32), () => t('ThisFieldIsRequired', '请输入显示名称'))],
-        tenancyName: [zodRule(z.string().min(2).max(64), () => t('ThisFieldIsRequired', '请输入租户名称'))],
+        displayName: [lengthRule(2, 32)],
+        tenancyName: [lengthRule(2, 64)],
         emailAddress: [emailRule],
         adminEmailAddress: [emailRule],
         password: [passwordRule],
@@ -33,8 +43,11 @@ export function useValidation(form: Ref<any>) {
                 z
                     .string()
                     .min(1)
-                    .refine((value) => value === (form.value.newPassword || form.value.password)),
-                () => t('PasswordsDoNotMatch', '两次密码不一致')
+                    .refine((value: string) => {
+                        const fields = form.value as PasswordFields;
+                        return value === (fields.newPassword || fields.password);
+                    }),
+                () => t('PasswordsDoNotMatch')
             ),
         ],
     }));

@@ -1,19 +1,25 @@
-import { ref } from 'vue';
+import { ref, type Ref } from 'vue';
 import { ElMessage, type FormInstance } from 'element-plus';
 import { t } from '../api';
-import type { crudApi } from '../api/crud';
+import type { CrudApi } from '../api/crud';
 import { useValidation } from './validation';
 
-export function useEditorDialog(
-    api: ReturnType<typeof crudApi>,
-    prepare: (id?: number) => Promise<{ form: any; options?: any[] }>,
-    onSaved: () => void
+export interface EditorData<TForm, TOption> {
+    form: TForm;
+    options?: TOption[];
+}
+
+export function useEditorDialog<TDto, TForm extends object, TOption = never>(
+    api: CrudApi<TDto, TForm>,
+    prepare: (id?: number) => Promise<EditorData<TForm, TOption>>,
+    onSaved: () => void,
+    emptyForm: () => TForm
 ) {
     const visible = ref(false);
     const busy = ref(false);
     const formRef = ref<FormInstance>();
-    const form = ref<any>({});
-    const choices = ref<any[]>([]);
+    const form = ref(emptyForm()) as Ref<TForm>;
+    const choices = ref([]) as Ref<TOption[]>;
     const tab = ref('details');
     const edit = ref(false);
     const { rules } = useValidation(form);
@@ -25,7 +31,7 @@ export function useEditorDialog(
         try {
             const result = await prepare(id);
             form.value = result.form;
-            choices.value = result.options || [];
+            choices.value = result.options ?? [];
             tab.value = 'details';
             edit.value = id !== undefined;
             visible.value = true;
@@ -40,7 +46,7 @@ export function useEditorDialog(
         try {
             if (!(await formRef.value.validate().catch(() => false))) return;
             await (edit.value ? api.update(form.value) : api.create(form.value));
-            ElMessage.success(t('SavedSuccessfully', '保存成功'));
+            ElMessage.success(t('SavedSuccessfully'));
             visible.value = false;
             onSaved();
         } finally {
