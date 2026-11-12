@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { generatePassword, isValidPassword } from '../../src/utils/password.ts';
-import { readCookie, serializeCookie } from '../../src/utils/cookies.ts';
+import { createStoredToken, isTokenExpired, parseStoredToken } from '../../src/utils/token.ts';
 import { resolveTenancyName } from '../../src/utils/tenancy.ts';
 import { errorMessage, isUnauthorized } from '../../src/utils/errors.ts';
 import { formatMessage } from '../../src/utils/format.ts';
@@ -30,21 +30,29 @@ test('password policy matches the ABP default rules', () => {
     assert.ok(!isValidPassword(undefined));
 });
 
-test('readCookie decodes values and tolerates missing or malformed cookies', () => {
-    const jar = 'a=1; Abp.AuthToken=abc%3D%3D; bad=%E0%A4%A';
-    assert.equal(readCookie(jar, 'Abp.AuthToken'), 'abc==');
-    assert.equal(readCookie(jar, 'a'), '1');
-    assert.equal(readCookie(jar, 'missing'), '');
-    assert.equal(readCookie(jar, 'bad'), '%E0%A4%A');
-    assert.equal(readCookie('ab=2; b=3', 'b'), '3', 'does not match on a name suffix');
+test('createStoredToken turns expireInSeconds into an absolute expiry', () => {
+    const token = createStoredToken({ accessToken: 'a', encryptedAccessToken: 'e', expireInSeconds: 86400 }, 1_000);
+    assert.deepEqual(token, { accessToken: 'a', encryptedAccessToken: 'e', expiresAt: 1_000 + 86_400_000 });
 });
 
-test('serializeCookie encodes the value and adds attributes', () => {
-    assert.equal(serializeCookie('t', 'a b'), 't=a%20b; path=/; SameSite=Lax');
-    assert.equal(
-        serializeCookie('t', 'x', { maxAge: 0, secure: true }),
-        't=x; path=/; SameSite=Lax; max-age=0; Secure'
-    );
+test('parseStoredToken accepts valid data and rejects malformed data', () => {
+    const raw = JSON.stringify({ accessToken: 'a', encryptedAccessToken: 'e', expiresAt: 5 });
+    assert.deepEqual(parseStoredToken(raw), { accessToken: 'a', encryptedAccessToken: 'e', expiresAt: 5 });
+    assert.equal(parseStoredToken(''), undefined);
+    assert.equal(parseStoredToken(null), undefined);
+    assert.equal(parseStoredToken('not json'), undefined);
+    assert.equal(parseStoredToken('{"accessToken":"","expiresAt":5}'), undefined, 'empty token');
+    assert.equal(parseStoredToken('{"accessToken":"a"}'), undefined, 'missing expiry');
+    assert.equal(parseStoredToken('{"accessToken":"a","expiresAt":5}').encryptedAccessToken, '');
+});
+
+test('isTokenExpired treats the last 30 seconds as expired', () => {
+    const token = { accessToken: 'a', encryptedAccessToken: '', expiresAt: 100_000 };
+    assert.equal(isTokenExpired(token, 0), false);
+    assert.equal(isTokenExpired(token, 69_999), false);
+    assert.equal(isTokenExpired(token, 70_000), true);
+    assert.equal(isTokenExpired(token, 200_000), true);
+    assert.equal(isTokenExpired(token, 99_000, 0), false, 'custom margin');
 });
 
 test('resolveTenancyName reads the query parameter or the subdomain template', () => {

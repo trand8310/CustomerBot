@@ -15,7 +15,7 @@
         "format:check": "prettier --check ."
     },
     "dependencies": {
-        "@fortawesome/fontawesome-free": "^6.7.2",
+        "@element-plus/icons-vue": "^2.3.2",
         "@microsoft/signalr": "^8.0.29",
         "@vueuse/core": "^15.0.0",
         "admin-lte": "^4.10.0",
@@ -25,6 +25,7 @@
         "element-plus": "^2.9.0",
         "pinia": "^4.1.0",
         "vue": "^3.5.0",
+        "vue-i18n": "^11.1.0",
         "vue-router": "^4.5.0",
         "zod": "^4.6.7"
     },

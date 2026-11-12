@@ -2,10 +2,11 @@ import axios from 'axios';
 import { ElMessage } from 'element-plus';
 import { apiBaseUrl, appBaseUrlTemplate } from '../config';
 import { pinia, useSessionStore } from '../store';
-import { cultureCookie, loadMessages, t, tOr } from '../locales';
-import { readCookie, serializeCookie } from '../utils/cookies';
+import { loadMessages, t, tOr } from '../locales';
 import { errorMessage, isUnauthorized, type AbpEnvelope } from '../utils/errors';
 import { resolveTenancyName } from '../utils/tenancy';
+import { accessToken, clearToken, endExpiredSession, scheduleExpiry, tokenStatus, watchAuthAcrossTabs } from './auth';
+import { readItem, storageKeys, writeItem } from './storage';
 import {
     TenantAvailabilityState,
     type IsTenantAvailableOutput,
@@ -17,24 +18,6 @@ export { t, tOr };
 
 export const state = useSessionStore(pinia);
 
-export const authTokenCookie = 'Abp.AuthToken';
-export const encryptedTokenCookie = 'enc_auth_token';
-export const tenantCookie = 'Abp.TenantId';
-
-/** Decoded cookie value, or '' when absent. */
-export function cookie(name: string): string {
-    return readCookie(document.cookie, name);
-}
-
-/**
- * Writes a cookie readable by this app. Secure is added automatically on HTTPS pages.
- * These cookies cannot be HttpOnly because the app must read the token to send it as a
- * Bearer header; moving to HttpOnly cookies needs a backend change (see readme).
- */
-export function setCookie(name: string, value: string | number, maxAge?: number): void {
-    document.cookie = serializeCookie(name, value, { maxAge, secure: location.protocol === 'https:' });
-}
-
 export interface RequestOptions {
     method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
     data?: unknown;
@@ -43,15 +26,12 @@ export interface RequestOptions {
     silent?: boolean;
 }
 
-function clearAuthCookies(): void {
-    setCookie(authTokenCookie, '', 0);
-    setCookie(encryptedTokenCookie, '', 0);
-}
-
 export async function api<T>(path: string, { method = 'GET', data, params, silent }: RequestOptions = {}): Promise<T> {
-    const token = cookie(authTokenCookie);
-    const tenant = cookie(tenantCookie);
-    const culture = cookie(cultureCookie);
+    // An expired token is never sent; the session ends and the user is sent back to login.
+    if (tokenStatus() === 'expired') endExpiredSession();
+    const token = accessToken();
+    const tenant = readItem(storageKeys.tenantId);
+    const culture = readItem(storageKeys.culture);
     const headers: Record<string, string> = {
         'Content-Type': 'application/json',
         'X-Requested-With': 'XMLHttpRequest',
@@ -76,10 +56,8 @@ export async function api<T>(path: string, { method = 'GET', data, params, silen
         if (envelope && Object.hasOwn(envelope, 'result')) return envelope.result as T;
         return body as T;
     } catch (error) {
-        if (isUnauthorized(error) && token) {
-            clearAuthCookies();
-            if (!location.pathname.startsWith('/account/')) location.assign('/account/login');
-        }
+        // 401 with a token: the server no longer accepts it (expired, revoked or signing key changed).
+        if (isUnauthorized(error) && token) endExpiredSession();
         if (!silent) ElMessage.error(errorMessage(error, t('NetworkRequestFailed')));
         throw error;
     }
@@ -98,11 +76,15 @@ export async function initialize(): Promise<void> {
             data: { tenancyName: tenantName },
         });
         if (tenant.state === TenantAvailabilityState.Available && tenant.tenantId !== undefined)
-            setCookie(tenantCookie, tenant.tenantId);
+            writeItem(storageKeys.tenantId, String(tenant.tenantId));
     }
     state.config = await api<UserConfiguration>('/AbpUserConfiguration/GetAll');
     if (state.config) loadMessages(state.config);
     state.session = await service<SessionInfo>('Session', 'GetCurrentLoginInformations');
+    if (state.session?.user) {
+        scheduleExpiry();
+        watchAuthAcrossTabs();
+    }
 }
 
 /**
@@ -114,6 +96,6 @@ export function permitted(name: string): boolean {
 }
 
 export function logout(): void {
-    clearAuthCookies();
+    clearToken();
     location.href = '/account/login';
 }

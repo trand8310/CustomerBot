@@ -1,13 +1,11 @@
 import { computed } from 'vue';
-import { setCookie, state } from '../api';
+import { state } from '../api';
+import { storageKeys, writeItem } from '../api/storage';
 import { userApi } from '../api/users';
-import { cultureCookie } from '../locales';
-
-const fiveYears = 5 * 365 * 86400;
 
 export async function changeLanguage(languageName: string): Promise<void> {
     if (state.session?.user) await userApi.changeLanguage(languageName);
-    setCookie(cultureCookie, languageName, fiveYears);
+    writeItem(storageKeys.culture, languageName);
     location.reload();
 }
 

@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue';
 import { useWindowSize } from '@vueuse/core';
 import { useRoute, useRouter } from 'vue-router';
 import dayjs from 'dayjs';
+import { ArrowDown, ChatDotRound, Expand, Fold, HomeFilled, OfficeBuilding } from '@element-plus/icons-vue';
 import { state, permitted, logout, t, tOr } from '../api';
 import { useLanguages } from '../composables/language';
 import NavigationMenuItem from '../components/navigation-menu/navigation-menu-item.vue';
@@ -21,6 +22,13 @@ const topbarPages = computed(() =>
         return !permission || permitted(permission);
     })
 );
+
+const currentTitle = computed(() => {
+    // The home page needs no breadcrumb; the house icon alone would repeat it.
+    if (route.name === 'home') return '';
+    const page = navigation.pages.find((entry) => entry.page === route.name);
+    return page ? tOr(page.titleKey, page.title) : '';
+});
 
 const { width } = useWindowSize();
 
@@ -49,7 +57,7 @@ watch(
         <aside class="app-sidebar">
             <div class="sidebar-brand">
                 <router-link class="brand-link" :to="{ name: router.hasRoute('home') ? 'home' : 'app' }">
-                    <span class="brand-mark"><i class="fa-solid fa-cube" aria-hidden="true"></i></span>
+                    <span class="brand-mark"><el-icon><ChatDotRound /></el-icon></span>
                     <span class="brand-text">CustomerBot</span>
                 </router-link>
             </div>
@@ -68,8 +76,15 @@ watch(
                 class="icon-button menu-toggle"
                 aria-label="Toggle sidebar"
                 @click="sidebarOpen = !sidebarOpen">
-                <i class="fa-solid fa-bars" aria-hidden="true"></i>
+                <el-icon><component :is="sidebarOpen ? Fold : Expand" /></el-icon>
             </button>
+            <nav v-if="currentTitle" class="topbar-breadcrumb" aria-label="breadcrumb">
+                <router-link :to="{ name: router.hasRoute('home') ? 'home' : 'app' }" aria-label="Home">
+                    <el-icon><HomeFilled /></el-icon>
+                </router-link>
+                <span class="breadcrumb-separator">/</span>
+                <span class="breadcrumb-current">{{ currentTitle }}</span>
+            </nav>
             <router-link v-for="page in topbarPages" :key="page.page" class="topbar-link" :to="{ name: page.page }">
                 {{ tOr(page.titleKey, page.title) }}
             </router-link>
@@ -83,7 +98,7 @@ watch(
                 <el-option v-for="l in languages" :key="l.name" :label="l.displayName" :value="l.name" />
             </el-select>
             <span v-if="state.session.tenant" class="tenant-chip">
-                <i class="fa-solid fa-building" aria-hidden="true"></i>
+                <el-icon><OfficeBuilding /></el-icon>
                 {{ state.session.tenant.tenancyName }}
             </span>
             <el-dropdown>
@@ -94,7 +109,7 @@ watch(
                     <span class="profile-text">
                         <strong>{{ state.session.user.userName }}</strong>
                     </span>
-                    <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+                    <el-icon class="profile-caret"><ArrowDown /></el-icon>
                 </span>
                 <template #dropdown>
                     <el-dropdown-menu>
@@ -124,8 +139,8 @@ watch(
 </template>
 <style>
 .customerbot-layout {
-    --lte-sidebar-width: 248px;
-    --lte-app-header-height: 3.5rem;
+    --lte-sidebar-width: 220px;
+    --lte-app-header-height: 56px;
     background-color: var(--app-bg);
 }
 .customerbot-layout.collapsed {
@@ -135,8 +150,7 @@ watch(
     display: none;
 }
 .customerbot-layout .app-main > .app-content {
-    padding: 1.75rem 2rem;
-    max-width: 1440px;
+    padding: 24px;
 }
 
 /* ---------- Sidebar ---------- */
@@ -149,53 +163,51 @@ watch(
     height: var(--lte-app-header-height);
     display: flex;
     align-items: center;
-    padding: 0 1.25rem;
+    padding: 0 16px 0 20px;
     border-bottom: 0;
 }
 .sidebar-brand .brand-link {
     display: flex;
     align-items: center;
-    gap: 0.625rem;
+    gap: 10px;
     padding: 0;
     border: 0;
     color: var(--app-text);
-    font-size: 1rem;
-    font-weight: 650;
-    letter-spacing: -0.01em;
+    font-size: 18px;
+    font-weight: 600;
     text-decoration: none;
 }
 .brand-mark {
     display: grid;
     place-items: center;
-    width: 30px;
-    height: 30px;
-    border-radius: 8px;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
     color: #fff;
-    font-size: 0.875rem;
-    background: linear-gradient(135deg, #6366f1, #4338ca);
-    box-shadow: 0 2px 6px rgba(79, 70, 229, 0.35);
+    font-size: 14px;
+    background: var(--app-primary);
 }
 .sidebar-wrapper {
-    padding: 0.5rem 0.75rem 1rem;
+    padding: 4px 8px 16px;
 }
 .app-sidebar .el-menu {
     --el-menu-bg-color: transparent;
-    --el-menu-text-color: var(--app-text-secondary);
+    --el-menu-text-color: var(--app-text);
     --el-menu-hover-text-color: var(--app-text);
-    --el-menu-hover-bg-color: #f1f5f9;
+    --el-menu-hover-bg-color: var(--app-fill-hover);
     --el-menu-active-color: var(--app-primary);
-    --el-menu-item-height: 38px;
-    --el-menu-sub-item-height: 36px;
-    --el-menu-base-level-padding: 12px;
-    --el-menu-level-padding: 16px;
-    --el-menu-item-font-size: 0.8125rem;
+    --el-menu-item-height: 40px;
+    --el-menu-sub-item-height: 40px;
+    --el-menu-base-level-padding: 16px;
+    --el-menu-level-padding: 24px;
+    --el-menu-item-font-size: 14px;
     border: 0;
 }
 .app-sidebar .el-menu-item,
 .app-sidebar .el-sub-menu__title {
-    border-radius: var(--app-radius-sm);
-    margin-bottom: 2px;
-    font-weight: 500;
+    margin: 4px 0;
+    border-radius: 8px;
+    line-height: 40px;
     transition:
         background-color var(--app-transition),
         color var(--app-transition);
@@ -203,25 +215,18 @@ watch(
 .app-sidebar .el-menu-item.is-active {
     background: var(--app-primary-soft);
     color: var(--app-primary);
-    font-weight: 600;
 }
-.app-sidebar .el-menu-item.is-active .menu-icon {
+.app-sidebar .el-sub-menu.is-active > .el-sub-menu__title {
     color: var(--app-primary);
 }
 .app-sidebar a {
     color: inherit;
 }
-.menu-icon {
-    width: 1.25rem;
-    margin-right: 0.625rem;
-    text-align: center;
-    font-size: 0.875rem;
-    color: #94a3b8;
-    transition: color var(--app-transition);
-}
-.app-sidebar .el-menu-item:hover .menu-icon,
-.app-sidebar .el-sub-menu__title:hover .menu-icon {
-    color: var(--app-text-secondary);
+.app-sidebar .el-menu-item .menu-icon,
+.app-sidebar .el-sub-menu__title .menu-icon {
+    width: 16px;
+    margin-right: 10px;
+    font-size: 16px;
 }
 
 /* ---------- Header ---------- */
@@ -231,48 +236,71 @@ watch(
     z-index: 1030;
     min-height: var(--lte-app-header-height);
     justify-content: flex-start;
-    padding: 0 1.5rem;
-    gap: 0.75rem;
-    background-color: rgba(255, 255, 255, 0.8);
-    backdrop-filter: saturate(180%) blur(12px);
-    -webkit-backdrop-filter: saturate(180%) blur(12px);
-    border-bottom: 1px solid var(--app-border);
-    box-shadow: none;
+    padding: 0 16px;
+    gap: 8px;
+    background-color: var(--app-surface);
+    border-bottom: 0;
+    box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
 }
 .icon-button {
     display: grid;
     place-items: center;
-    width: 34px;
-    height: 34px;
+    width: 32px;
+    height: 32px;
     border: 0;
     border-radius: var(--app-radius-sm);
     background: transparent;
-    color: var(--app-text-muted);
+    color: var(--app-text-secondary);
+    font-size: 16px;
     cursor: pointer;
-    transition:
-        background-color var(--app-transition),
-        color var(--app-transition);
+    transition: background-color var(--app-transition);
 }
 .icon-button:hover {
-    background: #f1f5f9;
-    color: var(--app-text);
+    background: var(--app-fill-hover);
 }
 .icon-button:focus-visible {
     outline: none;
     box-shadow: var(--app-ring);
 }
-.topbar-link {
-    padding: 6px 10px;
-    border-radius: var(--app-radius-sm);
-    color: var(--app-text-secondary);
-    font-weight: 500;
+.topbar-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: 4px;
+    font-size: 14px;
+    color: var(--app-text-muted);
 }
-.topbar-link:hover {
-    background: #f1f5f9;
+.topbar-breadcrumb a {
+    color: var(--app-text-muted);
+}
+.topbar-breadcrumb a:hover {
     color: var(--app-text);
 }
-.topbar-link.router-link-active {
-    color: var(--app-primary);
+.breadcrumb-current {
+    color: var(--app-text);
+}
+.topbar-breadcrumb + .topbar-link {
+    position: relative;
+    margin-left: 17px;
+}
+.topbar-breadcrumb + .topbar-link::before {
+    content: '';
+    position: absolute;
+    left: -13px;
+    top: 50%;
+    width: 1px;
+    height: 14px;
+    transform: translateY(-50%);
+    background: var(--app-border-strong);
+}
+.topbar-link {
+    padding: 4px 12px;
+    border-radius: var(--app-radius-sm);
+    color: var(--app-text);
+}
+.topbar-link:hover {
+    background: var(--app-fill-hover);
+    color: var(--app-text);
 }
 .topbar-spacer {
     flex: 1;
@@ -281,61 +309,57 @@ watch(
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 4px 10px;
-    border: 1px solid var(--app-border);
-    border-radius: 999px;
-    font-size: 0.75rem;
-    font-weight: 500;
+    padding: 0 12px;
     color: var(--app-text-secondary);
-    background: var(--app-surface);
 }
-.tenant-chip i {
-    color: #94a3b8;
+.tenant-chip .el-icon {
+    color: var(--app-text-muted);
+    font-size: 12px;
 }
 .profile-trigger {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 4px 8px 4px 4px;
-    border-radius: 999px;
+    gap: 8px;
+    height: 40px;
+    padding: 0 12px;
+    border-radius: var(--app-radius-sm);
     cursor: pointer;
     color: var(--app-text);
     outline: none;
     transition: background-color var(--app-transition);
 }
 .profile-trigger:hover {
-    background: #f1f5f9;
+    background: var(--app-fill-hover);
 }
-.profile-trigger .fa-chevron-down {
-    font-size: 0.625rem;
-    color: #94a3b8;
+.profile-caret {
+    font-size: 12px;
+    color: var(--app-text-muted);
 }
 .profile-text strong {
-    font-weight: 600;
-    font-size: 0.8125rem;
+    font-weight: 400;
+    font-size: 14px;
 }
 .profile-avatar {
     display: grid;
     place-items: center;
-    width: 30px;
-    height: 30px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
-    font-size: 0.75rem;
-    font-weight: 600;
+    font-size: 13px;
     color: #fff;
-    background: linear-gradient(135deg, #818cf8, #4f46e5);
+    background: var(--app-primary);
 }
 
 /* ---------- Footer ---------- */
 .customerbot-layout .app-footer {
     display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: 1rem 2rem;
-    border-top: 1px solid var(--app-border);
+    justify-content: center;
+    gap: 16px;
+    padding: 16px 24px 24px;
+    border-top: 0;
     background: transparent;
     color: var(--app-text-muted);
-    font-size: 0.75rem;
+    font-size: 14px;
 }
 
 .sidebar-backdrop {
@@ -350,7 +374,7 @@ watch(
         inset: 0 auto 0 0;
         z-index: 1037;
         overflow-y: auto;
-        box-shadow: var(--app-shadow-lg);
+        box-shadow: var(--app-shadow-popup);
     }
     .sidebar-backdrop {
         display: block;
@@ -358,18 +382,15 @@ watch(
         inset: 0;
         z-index: 1036;
         border: 0;
-        background: rgba(15, 23, 42, 0.45);
-        backdrop-filter: blur(2px);
-    }
-    .customerbot-layout .app-header.topbar {
-        padding: 0 1rem;
+        background: rgba(0, 0, 0, 0.45);
     }
     .customerbot-layout .app-main > .app-content {
-        padding: 1.25rem 1rem;
+        padding: 16px;
     }
     .topbar-link,
     .tenant-chip,
-    .profile-text {
+    .profile-text,
+    .topbar-breadcrumb {
         display: none;
     }
     .topbar-language {
@@ -377,7 +398,9 @@ watch(
     }
     .customerbot-layout .app-footer {
         flex-direction: column;
-        padding: 1rem;
+        align-items: center;
+        gap: 4px;
+        padding: 16px;
     }
 }
 </style>

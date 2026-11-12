@@ -1,7 +1,7 @@
 import type { HubConnection } from '@microsoft/signalr';
 import { ElNotification } from 'element-plus';
 import { apiBaseUrl } from '../config';
-import { cookie, encryptedTokenCookie } from '../api';
+import { encryptedAccessToken } from '../api/auth';
 
 let connection: HubConnection | undefined;
 
@@ -19,7 +19,8 @@ export async function startNotifications(): Promise<void> {
     // Loaded on demand so the SignalR client is not part of the initial bundle.
     const { HubConnectionBuilder, LogLevel } = await import('@microsoft/signalr');
     if (connection) return;
-    const encrypted = encodeURIComponent(cookie(encryptedTokenCookie));
+    const encrypted = encodeURIComponent(encryptedAccessToken());
+    if (!encrypted) return;
     const current = new HubConnectionBuilder()
         .withUrl(`${apiBaseUrl}/signalr?enc_auth_token=${encrypted}`)
         .withAutomaticReconnect()

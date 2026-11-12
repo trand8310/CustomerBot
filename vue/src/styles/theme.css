@@ -1,42 +1,45 @@
 /*
- * CustomerBot theme — design tokens and global overrides for AdminLTE / Bootstrap / Element Plus.
+ * CustomerBot theme — Ant Design (v5) visual language applied to AdminLTE / Bootstrap / Element Plus.
  * Loaded after the vendor stylesheets in main.ts so these rules win.
  */
 
 :root {
-    /* Neutrals (slate) */
-    --app-bg: #f5f6f8;
+    /* Ant Design neutral tokens */
+    --app-bg: #f5f5f5;
     --app-surface: #ffffff;
-    --app-surface-muted: #f8fafc;
-    --app-border: #e5e7eb;
-    --app-border-strong: #d1d5db;
-    --app-text: #0f172a;
-    --app-text-secondary: #475569;
-    --app-text-muted: #64748b;
+    --app-surface-muted: #fafafa;
+    --app-border: #f0f0f0;
+    --app-border-strong: #d9d9d9;
+    --app-text: rgba(0, 0, 0, 0.88);
+    --app-text-secondary: rgba(0, 0, 0, 0.65);
+    --app-text-muted: rgba(0, 0, 0, 0.45);
+    --app-fill-hover: rgba(0, 0, 0, 0.04);
 
-    /* Brand (indigo) */
-    --app-primary: #4f46e5;
-    --app-primary-hover: #4338ca;
-    --app-primary-soft: #eef2ff;
-    --app-primary-rgb: 79, 70, 229;
+    /* Ant Design brand blue */
+    --app-primary: #1677ff;
+    --app-primary-hover: #4096ff;
+    --app-primary-active: #0958d9;
+    --app-primary-soft: #e6f4ff;
+    --app-primary-border: #91caff;
+    --app-primary-rgb: 22, 119, 255;
 
-    /* Status tones */
-    --app-success: #059669;
-    --app-success-soft: #ecfdf5;
-    --app-warning: #d97706;
-    --app-warning-soft: #fffbeb;
-    --app-danger: #dc2626;
-    --app-danger-soft: #fef2f2;
+    /* Status */
+    --app-success: #52c41a;
+    --app-success-text: #389e0d;
+    --app-success-soft: #f6ffed;
+    --app-success-border: #b7eb8f;
+    --app-warning: #faad14;
+    --app-danger: #ff4d4f;
 
     /* Shape & depth */
-    --app-radius-sm: 8px;
-    --app-radius: 12px;
-    --app-radius-lg: 16px;
-    --app-shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
-    --app-shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
-    --app-shadow-lg: 0 12px 32px -8px rgba(15, 23, 42, 0.12), 0 4px 8px -4px rgba(15, 23, 42, 0.06);
-    --app-ring: 0 0 0 3px rgba(var(--app-primary-rgb), 0.18);
-    --app-transition: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    --app-radius-sm: 6px;
+    --app-radius: 8px;
+    --app-shadow-card: 0 1px 2px 0 rgba(0, 0, 0, 0.03), 0 1px 6px -1px rgba(0, 0, 0, 0.02),
+        0 2px 4px 0 rgba(0, 0, 0, 0.02);
+    --app-shadow-popup: 0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 3px 6px -4px rgba(0, 0, 0, 0.12),
+        0 9px 28px 8px rgba(0, 0, 0, 0.05);
+    --app-ring: 0 0 0 2px rgba(5, 145, 255, 0.1);
+    --app-transition: 200ms cubic-bezier(0.645, 0.045, 0.355, 1);
 
     /* Bootstrap / AdminLTE */
     --bs-primary: var(--app-primary);
@@ -51,27 +54,32 @@
     --bs-border-color: var(--app-border);
     --bs-border-radius: var(--app-radius-sm);
 
-    /* Element Plus */
-    --el-color-primary: #4f46e5;
-    --el-color-primary-light-3: #847eed;
-    --el-color-primary-light-5: #a7a3f2;
-    --el-color-primary-light-7: #cbc8f7;
-    --el-color-primary-light-8: #d7d4fa;
-    --el-color-primary-light-9: #eef2ff;
-    --el-color-primary-dark-2: #3f38b7;
-    --el-color-success: #059669;
-    --el-color-warning: #d97706;
-    --el-color-danger: #dc2626;
+    /* Element Plus mapped to Ant Design */
+    --el-color-primary: #1677ff;
+    --el-color-primary-light-3: #4096ff;
+    --el-color-primary-light-5: #69b1ff;
+    --el-color-primary-light-7: #91caff;
+    --el-color-primary-light-8: #bae0ff;
+    --el-color-primary-light-9: #e6f4ff;
+    --el-color-primary-dark-2: #0958d9;
+    --el-color-success: #52c41a;
+    --el-color-success-light-9: #f6ffed;
+    --el-color-warning: #faad14;
+    --el-color-danger: #ff4d4f;
+    --el-color-danger-light-3: #ff7875;
+    --el-color-danger-dark-2: #d9363e;
     --el-text-color-primary: var(--app-text);
-    --el-text-color-regular: var(--app-text-secondary);
+    --el-text-color-regular: var(--app-text);
     --el-text-color-secondary: var(--app-text-muted);
+    --el-text-color-placeholder: rgba(0, 0, 0, 0.25);
     --el-border-color: var(--app-border-strong);
     --el-border-color-light: var(--app-border);
-    --el-border-color-lighter: #eef0f3;
+    --el-border-color-lighter: var(--app-border);
     --el-fill-color-light: var(--app-surface-muted);
     --el-border-radius-base: var(--app-radius-sm);
-    --el-border-radius-small: 6px;
-    --el-component-size: 34px;
+    --el-border-radius-small: 4px;
+    --el-component-size: 32px;
+    --el-component-size-large: 40px;
 }
 
 /* ---------- Base ---------- */
@@ -80,7 +88,6 @@ body {
     color: var(--app-text);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    text-rendering: optimizeLegibility;
 }
 a {
     color: var(--app-primary);
@@ -90,9 +97,6 @@ a {
 a:hover {
     color: var(--app-primary-hover);
 }
-::selection {
-    background: rgba(var(--app-primary-rgb), 0.18);
-}
 
 /* ---------- Page heading ---------- */
 .heading {
@@ -100,38 +104,42 @@ a:hover {
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
-    margin-bottom: 1.25rem;
+    margin-bottom: 16px;
 }
 .heading h1 {
     margin: 0;
-    font-size: 1.5rem;
+    font-size: 20px;
     font-weight: 600;
-    letter-spacing: -0.015em;
+    line-height: 32px;
     color: var(--app-text);
 }
 
 /* ---------- Cards / panels ---------- */
 .card {
-    border: 1px solid var(--app-border);
+    border: 0;
     border-radius: var(--app-radius);
     background: var(--app-surface);
-    box-shadow: var(--app-shadow-xs);
+    box-shadow: var(--app-shadow-card);
 }
 .card > .card-header {
+    display: flex;
+    align-items: center;
+    min-height: 56px;
+    padding: 0 24px;
     background: transparent;
     border-bottom: 1px solid var(--app-border);
-    padding: 1rem 1.25rem;
 }
 .card > .card-body {
-    padding: 1.25rem;
+    padding: 24px;
 }
 .card-title {
-    font-size: 0.9375rem;
+    margin: 0;
+    font-size: 16px;
     font-weight: 600;
     color: var(--app-text);
 }
 .panel {
-    padding: 1.25rem;
+    padding: 24px;
 }
 
 /* ---------- List page toolbar & pager ---------- */
@@ -139,13 +147,11 @@ a:hover {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.5rem;
-    margin: -1.25rem -1.25rem 0;
-    padding: 1rem 1.25rem;
-    border-bottom: 1px solid var(--app-border);
+    gap: 8px;
+    margin-bottom: 16px;
 }
 .filters .el-input {
-    max-width: 280px;
+    max-width: 264px;
 }
 .filters .el-button + .el-button {
     margin-left: 0;
@@ -153,28 +159,28 @@ a:hover {
 .pager {
     display: flex;
     justify-content: flex-end;
-    margin: 0 -1.25rem -1.25rem;
-    padding: 0.875rem 1.25rem;
-    border-top: 1px solid var(--app-border);
+    margin-top: 16px;
 }
 
-/* ---------- Element Plus: buttons ---------- */
+/* ---------- Buttons ---------- */
 .el-button {
-    font-weight: 500;
-    transition:
-        background-color var(--app-transition),
-        border-color var(--app-transition),
-        color var(--app-transition),
-        box-shadow var(--app-transition);
+    font-weight: 400;
+    transition: all var(--app-transition);
 }
-.el-button:not(.is-link):not(.is-text) {
-    box-shadow: var(--app-shadow-xs);
+.el-button--default:not(.is-link):not(.is-text) {
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.02);
 }
-.el-button:focus-visible {
-    box-shadow: var(--app-ring);
+.el-button--primary:not(.is-link):not(.is-text):not(.is-plain) {
+    box-shadow: 0 2px 0 rgba(5, 145, 255, 0.1);
+}
+.el-button--danger:not(.is-link):not(.is-text):not(.is-plain) {
+    box-shadow: 0 2px 0 rgba(255, 38, 5, 0.06);
+}
+.el-button.is-link {
+    font-weight: 400;
 }
 
-/* ---------- Element Plus: inputs ---------- */
+/* ---------- Inputs ---------- */
 .el-input__wrapper,
 .el-select__wrapper {
     box-shadow: 0 0 0 1px var(--app-border-strong) inset;
@@ -182,7 +188,7 @@ a:hover {
 }
 .el-input__wrapper:hover,
 .el-select__wrapper:hover {
-    box-shadow: 0 0 0 1px #9ca3af inset;
+    box-shadow: 0 0 0 1px var(--app-primary-hover) inset;
 }
 .el-input__wrapper.is-focus,
 .el-select__wrapper.is-focused {
@@ -191,143 +197,131 @@ a:hover {
         var(--app-ring);
 }
 .el-form-item__label {
-    font-weight: 500;
-    color: var(--app-text-secondary);
+    color: var(--app-text);
 }
 
-/* ---------- Element Plus: table ---------- */
+/* ---------- Table ---------- */
 .el-table {
     --el-table-header-bg-color: var(--app-surface-muted);
-    --el-table-header-text-color: var(--app-text-muted);
-    --el-table-row-hover-bg-color: #f8f9fc;
-    --el-table-border-color: #eef0f3;
+    --el-table-header-text-color: var(--app-text);
+    --el-table-row-hover-bg-color: var(--app-surface-muted);
+    --el-table-border-color: var(--app-border);
     --el-table-text-color: var(--app-text);
-    font-size: 0.8125rem;
-}
-.panel > .el-table {
-    margin: 0 -1.25rem;
-    width: calc(100% + 2.5rem);
+    font-size: 14px;
 }
 .el-table th.el-table__cell {
-    font-size: 0.75rem;
     font-weight: 600;
-    letter-spacing: 0.02em;
 }
 .el-table .el-table__cell {
-    padding: 11px 0;
-}
-.el-table th.el-table__cell:first-child .cell,
-.el-table td.el-table__cell:first-child .cell {
-    padding-left: 1.25rem;
-}
-.el-table th.el-table__cell:last-child .cell,
-.el-table td.el-table__cell:last-child .cell {
-    padding-right: 1.25rem;
+    padding: 12px 0;
 }
 .el-table__inner-wrapper::before {
     display: none;
 }
-
-/* ---------- Element Plus: tags (pill badges with dot) ---------- */
-.el-tag {
-    border: 0;
-    border-radius: 999px;
-    padding: 0 10px;
-    font-weight: 500;
-    gap: 6px;
+.el-table__header-wrapper {
+    border-radius: var(--app-radius) var(--app-radius) 0 0;
 }
-.el-tag::before {
-    content: '';
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: currentColor;
-    flex: none;
+
+/* ---------- Tags (Ant Design style) ---------- */
+.el-tag {
+    height: 22px;
+    padding: 0 7px;
+    border-radius: 4px;
+    font-size: 12px;
+    line-height: 20px;
 }
 .el-tag--success {
     background: var(--app-success-soft);
-    color: var(--app-success);
+    border-color: var(--app-success-border);
+    color: var(--app-success-text);
 }
 .el-tag--info {
-    background: #f1f5f9;
-    color: var(--app-text-muted);
+    background: var(--app-surface-muted);
+    border-color: var(--app-border-strong);
+    color: var(--app-text);
 }
 
-/* ---------- Element Plus: dialogs, popovers, messages ---------- */
+/* ---------- Dialogs, popovers, messages ---------- */
 .el-dialog {
-    border-radius: var(--app-radius-lg);
-    padding: 1.5rem;
-    box-shadow: var(--app-shadow-lg);
+    border-radius: var(--app-radius);
+    padding: 20px 24px;
+    box-shadow: var(--app-shadow-popup);
 }
 .el-dialog__title,
 .el-message-box__title {
-    font-size: 1.0625rem;
+    font-size: 16px;
     font-weight: 600;
     color: var(--app-text);
 }
 .el-overlay {
-    background-color: rgba(15, 23, 42, 0.4);
-    backdrop-filter: blur(2px);
+    background-color: rgba(0, 0, 0, 0.45);
 }
 .el-message-box {
-    border-radius: var(--app-radius-lg);
-    padding: 1.25rem;
-    box-shadow: var(--app-shadow-lg);
+    border-radius: var(--app-radius);
+    padding: 20px 24px;
+    box-shadow: var(--app-shadow-popup);
 }
 .el-popper.is-light,
 .el-dropdown__popper.el-popper {
+    border: 0;
     border-radius: var(--app-radius);
-    border-color: var(--app-border);
-    box-shadow: var(--app-shadow-lg);
+    box-shadow: var(--app-shadow-popup);
 }
 .el-dropdown-menu {
-    padding: 6px;
+    padding: 4px;
 }
 .el-dropdown-menu__item {
-    border-radius: 6px;
-    padding: 7px 12px;
+    border-radius: 4px;
+    padding: 5px 12px;
+    line-height: 22px;
+}
+.el-dropdown-menu__item:not(.is-disabled):hover {
+    background: var(--app-fill-hover);
+    color: var(--app-text);
 }
 .el-select-dropdown__item {
-    border-radius: 6px;
-    margin: 0 6px;
+    border-radius: 4px;
+    margin: 0 4px;
+}
+.el-select-dropdown__item.is-selected {
+    background: var(--app-primary-soft);
+    font-weight: 600;
 }
 .el-message,
 .el-notification {
     border-radius: var(--app-radius);
-    box-shadow: var(--app-shadow-lg);
+    box-shadow: var(--app-shadow-popup);
 }
 
-/* ---------- Element Plus: tabs & pagination ---------- */
-.el-tabs__item {
-    font-weight: 500;
-}
+/* ---------- Pagination ---------- */
 .el-pagination {
     --el-pagination-button-bg-color: transparent;
+    --el-pagination-font-size: 14px;
 }
 .el-pagination .el-pager li {
-    border-radius: 6px;
+    border-radius: var(--app-radius-sm);
+    font-weight: 400;
+}
+.el-pagination .el-pager li:not(.is-active):hover {
+    background: var(--app-fill-hover);
+    color: var(--app-text);
 }
 .el-pagination .el-pager li.is-active {
-    background: var(--app-primary-soft);
+    border: 1px solid var(--app-primary);
+    background: var(--app-surface);
     color: var(--app-primary);
     font-weight: 600;
 }
 
 /* ---------- Loading mask ---------- */
 .el-loading-mask {
-    background-color: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(1px);
-}
-
-/* ---------- Scrollbars ---------- */
-* {
-    scrollbar-width: thin;
-    scrollbar-color: #cbd5e1 transparent;
+    background-color: rgba(255, 255, 255, 0.6);
 }
 
 @media (max-width: 700px) {
-    .heading h1 {
-        font-size: 1.25rem;
+    .panel,
+    .card > .card-body {
+        padding: 16px;
     }
     .filters .el-input {
         max-width: none;

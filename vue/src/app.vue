@@ -31,7 +31,7 @@ onMounted(boot);
 </script>
 <template>
     <el-config-provider :locale="elementLocale">
-        <div v-loading="loading" :element-loading-text="t('ConnectingToServer')">
+        <div v-loading="loading" class="app-root" :element-loading-text="t('ConnectingToServer')">
             <div v-if="!loading && !state.config" class="login-wrap">
                 <div class="panel card">
                     {{ t('AppLoadFailed') }}
@@ -44,14 +44,15 @@ onMounted(boot);
 </template>
 <style>
 :root {
-    --app-font-family: 'Segoe UI Variable Text', 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Helvetica Neue',
-        system-ui, sans-serif;
+    --app-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans',
+        sans-serif;
     --bs-body-font-family: var(--app-font-family);
-    --bs-body-font-size: 0.875rem;
+    --bs-body-font-size: 14px;
+    --bs-body-line-height: 1.5715;
     --el-font-family: var(--app-font-family);
-    --el-font-size-base: 0.8125rem;
-    --el-font-size-small: 0.75rem;
-    --el-font-size-extra-small: 0.75rem;
+    --el-font-size-base: 14px;
+    --el-font-size-small: 12px;
+    --el-font-size-extra-small: 12px;
 }
 :root:lang(zh) {
     --app-font-family: 'Segoe UI Variable Text', 'Segoe UI', -apple-system, 'PingFang SC', 'Microsoft YaHei',
@@ -84,15 +85,15 @@ body,
 .el-popper {
     font-family: var(--app-font-family);
 }
+.app-root {
+    min-height: 100vh;
+}
 .login-wrap {
     min-height: 100vh;
     display: grid;
     place-items: center;
     padding: 1.5rem;
-    background:
-        radial-gradient(60rem 40rem at 10% -10%, rgba(99, 102, 241, 0.16), transparent 60%),
-        radial-gradient(50rem 36rem at 110% 110%, rgba(14, 165, 233, 0.12), transparent 60%),
-        var(--app-bg);
+    background: var(--app-bg);
 }
 @media (max-width: 700px) {
     .el-dialog {

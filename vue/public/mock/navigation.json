@@ -5,7 +5,7 @@
         "path": "home",
         "titleKey": "HomePage",
         "title": "首页",
-        "icon": "fa-house",
+        "icon": "HomeFilled",
         "topbar": true
     },
     {
@@ -14,7 +14,7 @@
         "path": "users",
         "titleKey": "Users",
         "title": "用户",
-        "icon": "fa-users"
+        "icon": "User"
     },
     {
         "type": "page",
@@ -22,7 +22,7 @@
         "path": "roles",
         "titleKey": "Roles",
         "title": "角色",
-        "icon": "fa-masks-theater"
+        "icon": "Key"
     },
     {
         "type": "page",
@@ -30,7 +30,7 @@
         "path": "tenants",
         "titleKey": "Tenants",
         "title": "租户",
-        "icon": "fa-building"
+        "icon": "OfficeBuilding"
     },
     {
         "type": "page",

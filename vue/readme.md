@@ -1,6 +1,6 @@
 # CustomerBot Vue
 
-Vue 3 + TypeScript client for the existing ASP.NET Boilerplate backend, using Element Plus components and AdminLTE 4 styles. Pinia manages the session, Vue Router the routes, Axios HTTP, Zod validation, VueUse utilities, dayjs dates, and ECharts the dashboard chart.
+Vue 3 + TypeScript client for the existing ASP.NET Boilerplate backend, using Element Plus components and icons (`@element-plus/icons-vue`), vue-i18n for translations, and AdminLTE 4 layout styles. Pinia manages the session, Vue Router the routes, Axios HTTP, Zod validation, VueUse utilities, dayjs dates, and ECharts the dashboard chart.
 
 ```bash
 npm install
@@ -43,14 +43,15 @@ The stand-in does not implement SignalR or prove real authentication, permission
 
 ## Translations
 
-Text is looked up with `t(key, ...args)`. The backend's `CustomerBot` localization source always wins; when it lacks a key, the built-in English or Chinese text in `src/locales/messages.ts` is used, and English is the final fallback. Placeholders use ABP's `{0}` style. To add a language, add a dictionary keyed by its two-letter code. Element Plus's own texts (pagination, empty tables) load on demand from `src/locales/element.ts`.
+Translations run on vue-i18n (Composition API, `src/locales/index.ts`). Use `$t(key)` or `useI18n().t(key)` in components, and the exported `t(key, ...args)` helper in plain TypeScript. The backend's `CustomerBot` localization source always wins; when it lacks a key, the built-in English or Chinese text in `src/locales/messages.ts` is used, and English is the final fallback. Placeholders keep ABP's `{0}` style (pass list arguments, e.g. `t('DefaultPasswordIs', pwd)`); a custom message compiler keeps backend texts literal, so `@` and `|` in them are not treated as vue-i18n syntax. To add a language, add a dictionary keyed by its two-letter code. Element Plus's own texts (pagination, empty tables) load on demand from `src/locales/element.ts`.
 
 ## Security notes
 
 - Permission checks in the router, menu and pages only decide what the UI shows. The backend must authorize every API call.
-- The access token is stored in a cookie that JavaScript can read, because the app sends it as a Bearer header. On HTTPS pages the cookie gets the `Secure` attribute. Making it HttpOnly requires a backend change: issue the token as an HttpOnly cookie and read it from the cookie on the server, then stop sending the Authorization header from the client.
+- The app sets no cookies. The access token is kept in Web Storage (`localStorage` with "Remember me", otherwise the tab's `sessionStorage`) together with its expiry time, and is sent as a Bearer header; tenant and language are stored the same way and sent as the `Abp.TenantId` and `.AspNetCore.Culture` headers (`src/api/storage.ts`).
+- The backend's JWT has a fixed lifetime (1 day, `tokenAuthConfig.Expiration`) and there is no refresh endpoint. The client never sends an expired token, warns 5 minutes before expiry, and on expiry or any 401 returns to the login page, then back to the same page after signing in (`src/api/auth.ts`). Logging out in one tab logs out the others.
 - New roles start with no permissions.
 
 ## Mock navigation
 
-The app fetches `/mock/navigation.json` at startup. Edit `public/mock/navigation.json` to change menu order, labels, nesting, or business route paths. A page with `"menu": false` stays routable without appearing in the sidebar. The `page` key maps to a frontend component and its existing permission in `src/router/navigation.ts`. `titleKey` is translated when a translation exists; otherwise `title` is shown. To connect a real endpoint, replace the request in `src/api/navigation.ts` with the backend call using the same response schema.
+The app fetches `/mock/navigation.json` at startup. Edit `public/mock/navigation.json` to change menu order, labels, nesting, or business route paths. A page with `"menu": false` stays routable without appearing in the sidebar. `icon` is an Element Plus icon component name (for example `User`, `OfficeBuilding`); names must be registered in `src/components/icons.ts`, and unknown names show no icon. The `page` key maps to a frontend component and its existing permission in `src/router/navigation.ts`. `titleKey` is translated when a translation exists; otherwise `title` is shown. To connect a real endpoint, replace the request in `src/api/navigation.ts` with the backend call using the same response schema.

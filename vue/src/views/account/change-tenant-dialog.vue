@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { ElMessage } from 'element-plus';
-import { setCookie, t, tenantCookie } from '../../api';
+import { t } from '../../api';
+import { removeItem, storageKeys, writeItem } from '../../api/storage';
 import { TenantAvailabilityState } from '../../api/types';
 import { accountApi } from '../../api/account';
 
@@ -10,13 +11,13 @@ const tenantName = ref('');
 
 async function changeTenant() {
     if (!tenantName.value) {
-        setCookie(tenantCookie, '', 0);
+        removeItem(storageKeys.tenantId);
         location.reload();
         return;
     }
     const r = await accountApi.isTenantAvailable(tenantName.value);
     if (r.state === TenantAvailabilityState.Available && r.tenantId !== undefined) {
-        setCookie(tenantCookie, r.tenantId);
+        writeItem(storageKeys.tenantId, String(r.tenantId));
         location.reload();
     } else
         ElMessage.warning(

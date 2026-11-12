@@ -15,6 +15,7 @@ import {
     ElDropdownMenu,
     ElForm,
     ElFormItem,
+    ElIcon,
     ElInput,
     ElLoading,
     ElMenu,
@@ -41,6 +42,7 @@ import 'element-plus/es/components/dropdown-item/style/css';
 import 'element-plus/es/components/dropdown-menu/style/css';
 import 'element-plus/es/components/form/style/css';
 import 'element-plus/es/components/form-item/style/css';
+import 'element-plus/es/components/icon/style/css';
 import 'element-plus/es/components/input/style/css';
 import 'element-plus/es/components/loading/style/css';
 import 'element-plus/es/components/menu/style/css';
@@ -70,6 +72,7 @@ const components: Plugin[] = [
     ElDropdownMenu,
     ElForm,
     ElFormItem,
+    ElIcon,
     ElInput,
     ElMenu,
     ElMenuItem,

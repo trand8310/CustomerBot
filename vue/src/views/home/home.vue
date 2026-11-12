@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref, type Component } from 'vue';
 import { useRouter } from 'vue-router';
+import { ArrowRight, Key, OfficeBuilding, User } from '@element-plus/icons-vue';
 import { permitted, state, t } from '../../api';
 import { userApi } from '../../api/users';
 import { roleApi } from '../../api/roles';
@@ -17,8 +18,7 @@ interface Counts {
 interface StatCard {
     label: string;
     value: number;
-    icon: string;
-    tone: 'indigo' | 'emerald' | 'amber';
+    icon: Component;
     route: string;
 }
 
@@ -64,24 +64,21 @@ const cards = computed<StatCard[]>(() => {
         list.push({
             label: t('Users'),
             value: (counts.activeUsers ?? 0) + (counts.inactiveUsers ?? 0),
-            icon: 'fa-users',
-            tone: 'indigo',
+            icon: User,
             route: 'users',
         });
     if (counts.roles !== undefined)
         list.push({
             label: t('Roles'),
             value: counts.roles,
-            icon: 'fa-masks-theater',
-            tone: 'emerald',
+            icon: Key,
             route: 'roles',
         });
     if (counts.tenants !== undefined)
         list.push({
             label: t('Tenants'),
             value: counts.tenants,
-            icon: 'fa-building',
-            tone: 'amber',
+            icon: OfficeBuilding,
             route: 'tenants',
         });
     return list;
@@ -110,30 +107,27 @@ const chart = computed(() => {
                 </div>
                 <div class="welcome-text">
                     <h2>{{ t('WelcomeUser', displayName) }}</h2>
-                    <p>
-                        <span class="meta-chip">
-                            <i class="fa-solid fa-building" aria-hidden="true"></i>
-                            {{ t('CurrentTenant') }}: {{ state.session?.tenant?.tenancyName || t('Host') }}
-                        </span>
-                        <span v-if="state.session?.application?.version" class="meta-chip">
-                            <i class="fa-solid fa-code-branch" aria-hidden="true"></i>
-                            {{ t('Version') }} {{ state.session.application.version }}
-                        </span>
-                    </p>
+                    <div class="welcome-meta">
+                        <span>{{ t('CurrentTenant') }}：{{ state.session?.tenant?.tenancyName || t('Host') }}</span>
+                        <template v-if="state.session?.application?.version">
+                            <span class="meta-divider"></span>
+                            <span>{{ t('Version') }}：{{ state.session.application.version }}</span>
+                        </template>
+                    </div>
                 </div>
             </div>
             <div v-loading="loading" class="stat-grid">
-                <div v-for="card in cards" :key="card.route" class="stat-card" :class="'tone-' + card.tone">
+                <div v-for="card in cards" :key="card.route" class="stat-card">
                     <div class="stat-head">
                         <span class="stat-label">{{ card.label }}</span>
                         <span class="stat-icon" aria-hidden="true">
-                            <i class="fa-solid" :class="card.icon"></i>
+                            <el-icon><component :is="card.icon" /></el-icon>
                         </span>
                     </div>
                     <div class="stat-value">{{ card.value.toLocaleString() }}</div>
                     <router-link v-if="router.hasRoute(card.route)" :to="{ name: card.route }" class="stat-link">
                         {{ t('ViewAll') }}
-                        <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                        <el-icon><ArrowRight /></el-icon>
                     </router-link>
                 </div>
                 <p v-if="!loading && !cards.length" class="stat-empty">{{ t('NoStatisticsAvailable') }}</p>
@@ -149,94 +143,60 @@ const chart = computed(() => {
 </template>
 <style>
 .welcome-card {
-    position: relative;
     display: flex;
     align-items: center;
-    gap: 1rem;
-    margin-bottom: 1.25rem;
-    padding: 1.5rem;
-    overflow: hidden;
-    border: 1px solid var(--app-border);
+    gap: 16px;
+    margin-bottom: 16px;
+    padding: 24px;
     border-radius: var(--app-radius);
-    background:
-        radial-gradient(28rem 14rem at 100% 0%, rgba(99, 102, 241, 0.14), transparent 70%),
-        radial-gradient(20rem 12rem at 85% 120%, rgba(14, 165, 233, 0.1), transparent 70%),
-        var(--app-surface);
-    box-shadow: var(--app-shadow-xs);
+    background: var(--app-surface);
+    box-shadow: var(--app-shadow-card);
 }
 .welcome-avatar {
     display: grid;
     place-items: center;
     flex: none;
-    width: 52px;
-    height: 52px;
-    border-radius: 14px;
-    font-size: 1.25rem;
-    font-weight: 600;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    font-size: 22px;
     color: #fff;
-    background: linear-gradient(135deg, #818cf8, #4f46e5);
-    box-shadow: 0 6px 16px -4px rgba(79, 70, 229, 0.45);
+    background: var(--app-primary);
 }
 .welcome-text h2 {
-    margin: 0 0 0.5rem;
-    font-size: 1.125rem;
+    margin: 0 0 8px;
+    font-size: 20px;
     font-weight: 600;
-    letter-spacing: -0.01em;
+    line-height: 28px;
+    color: var(--app-text);
 }
-.welcome-text p {
+.welcome-meta {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem;
-    margin: 0;
-}
-.meta-chip {
-    display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 3px 10px;
-    border: 1px solid var(--app-border);
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.7);
-    font-size: 0.75rem;
-    color: var(--app-text-secondary);
+    gap: 8px 12px;
+    font-size: 14px;
+    color: var(--app-text-muted);
 }
-.meta-chip i {
-    color: #94a3b8;
+.meta-divider {
+    width: 1px;
+    height: 14px;
+    background: var(--app-border-strong);
 }
 .stat-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 1rem;
-    min-height: 120px;
-    margin-bottom: 1.25rem;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+    min-height: 110px;
+    margin-bottom: 16px;
 }
 .stat-card {
-    --tone: var(--app-primary);
-    --tone-soft: var(--app-primary-soft);
     display: flex;
     flex-direction: column;
-    padding: 1.25rem;
-    border: 1px solid var(--app-border);
+    padding: 20px 24px 0;
     border-radius: var(--app-radius);
     background: var(--app-surface);
-    box-shadow: var(--app-shadow-xs);
-    transition:
-        box-shadow var(--app-transition),
-        transform var(--app-transition),
-        border-color var(--app-transition);
-}
-.stat-card:hover {
-    transform: translateY(-2px);
-    border-color: var(--app-border-strong);
-    box-shadow: var(--app-shadow-sm);
-}
-.stat-card.tone-emerald {
-    --tone: var(--app-success);
-    --tone-soft: var(--app-success-soft);
-}
-.stat-card.tone-amber {
-    --tone: var(--app-warning);
-    --tone-soft: var(--app-warning-soft);
+    box-shadow: var(--app-shadow-card);
 }
 .stat-head {
     display: flex;
@@ -244,46 +204,42 @@ const chart = computed(() => {
     justify-content: space-between;
 }
 .stat-label {
-    font-size: 0.8125rem;
-    font-weight: 500;
+    font-size: 14px;
     color: var(--app-text-muted);
 }
 .stat-icon {
     display: grid;
     place-items: center;
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
-    background: var(--tone-soft);
-    color: var(--tone);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--app-primary-soft);
+    color: var(--app-primary);
+    font-size: 14px;
 }
 .stat-value {
-    margin: 0.5rem 0 1rem;
-    font-size: 2rem;
-    font-weight: 650;
-    line-height: 1.1;
-    letter-spacing: -0.02em;
+    margin: 4px 0 16px;
+    font-size: 30px;
+    font-weight: 400;
+    line-height: 38px;
     font-variant-numeric: tabular-nums;
     color: var(--app-text);
 }
 .stat-link {
-    display: inline-flex;
+    display: flex;
     align-items: center;
-    gap: 6px;
-    margin-top: auto;
-    font-size: 0.8125rem;
-    font-weight: 500;
-    color: var(--tone);
-}
-.stat-link i {
-    font-size: 0.75rem;
-    transition: transform var(--app-transition);
+    justify-content: space-between;
+    margin: auto -24px 0;
+    padding: 10px 24px;
+    border-top: 1px solid var(--app-border);
+    font-size: 14px;
+    color: var(--app-text-secondary);
 }
 .stat-link:hover {
-    color: var(--tone);
+    color: var(--app-primary);
 }
-.stat-link:hover i {
-    transform: translateX(3px);
+.stat-link .el-icon {
+    font-size: 12px;
 }
 .stat-empty {
     grid-column: 1 / -1;
@@ -292,7 +248,12 @@ const chart = computed(() => {
 }
 @media (max-width: 700px) {
     .welcome-card {
-        padding: 1.125rem;
+        padding: 16px;
+    }
+    .welcome-avatar {
+        width: 44px;
+        height: 44px;
+        font-size: 18px;
     }
 }
 </style>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Back } from '@element-plus/icons-vue';
 import { t } from '../../api';
 </script>
 
@@ -7,7 +8,7 @@ import { t } from '../../api';
         <span class="not-found-code">404</span>
         <p>{{ t('PageNotFound') }}</p>
         <router-link :to="{ name: 'app' }" class="not-found-link">
-            <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+            <el-icon><Back /></el-icon>
             {{ t('HomePage') }}
         </router-link>
     </section>
@@ -18,18 +19,15 @@ import { t } from '../../api';
     flex-direction: column;
     align-items: center;
     gap: 0.75rem;
-    padding: 3.5rem 1.5rem;
+    padding: 3rem 1.5rem;
     text-align: center;
 }
 .not-found-code {
-    font-size: 3.5rem;
-    font-weight: 700;
+    font-size: 3rem;
+    font-weight: 600;
     line-height: 1;
-    letter-spacing: -0.04em;
-    background: linear-gradient(135deg, #818cf8, #4338ca);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+    letter-spacing: -0.02em;
+    color: var(--app-text);
 }
 .not-found p {
     margin: 0;
