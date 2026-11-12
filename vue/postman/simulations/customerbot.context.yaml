@@ -1,0 +1,23 @@
+purpose:
+    stands_in_for: CustomerBot ASP.NET Boilerplate HTTP API
+    unblocks: Browser smoke testing while the local backend and its database are unavailable.
+assumptions:
+    - id: abp-envelope-and-crud
+      status: supported
+      claim: The client handles ABP response envelopes and sends the CRUD request shapes used by this repository.
+      reason: The mock was authored from the Angular service proxies and backend DTOs, not from observed production traffic.
+      verification: On 2026-11-11 a browser run exercised login, listing, user creation and editing, sorting request, password reset, role and tenant CRUD, password change, tenant query resolution and registration against the local stand-in. Live backend behavior remains unverified.
+      source: ../../../angular/src/shared/service-proxies/service-proxies.ts; ../../../aspnet-core/src/CustomerBot.Application; ../../tests/smoke.mjs
+      updated_at: '2026-11-11'
+    - id: session-and-permissions
+      status: unknown
+      claim: Authentication, permissions, tenant resolution and SignalR behave correctly with a real deployment.
+      reason: The stand-in assumes permissions and does not implement SignalR; it does not establish server authorization or notification behavior.
+      verification: Backend was not listening on localhost:44311. Validate against a running backend and database.
+      source: ../../src/api/index.ts; ../../src/services/notifications.ts; ../../../aspnet-core/src/CustomerBot.Web.Host/Startup
+      updated_at: '2026-11-11'
+fingerprints:
+    - id: local-standin
+      date: '2026-11-11'
+      commit: null
+      cli: '1.74.0'

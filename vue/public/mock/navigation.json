@@ -1,0 +1,43 @@
+[
+    {
+        "type": "page",
+        "page": "home",
+        "path": "home",
+        "titleKey": "HomePage",
+        "title": "首页",
+        "icon": "fa-house",
+        "topbar": true
+    },
+    {
+        "type": "page",
+        "page": "users",
+        "path": "users",
+        "titleKey": "Users",
+        "title": "用户",
+        "icon": "fa-users"
+    },
+    {
+        "type": "page",
+        "page": "roles",
+        "path": "roles",
+        "titleKey": "Roles",
+        "title": "角色",
+        "icon": "fa-masks-theater"
+    },
+    {
+        "type": "page",
+        "page": "tenants",
+        "path": "tenants",
+        "titleKey": "Tenants",
+        "title": "租户",
+        "icon": "fa-building"
+    },
+    {
+        "type": "page",
+        "page": "update-password",
+        "path": "update-password",
+        "titleKey": "UpdatePassword",
+        "title": "修改密码",
+        "menu": false
+    }
+]
